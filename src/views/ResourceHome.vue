@@ -13,7 +13,7 @@
           <ResourceSearch />
           <!-- {/* 搜索框 Ends */} -->
           <!-- {/* 数据列表 Starts */} -->
-          <ResourceList @handleItemClick="selectResource" :resources="resources"  />
+          <ResourceList @handleItemClick="selectResource" :resources="resources" :activeId="activeResource?._id "  />
           <!-- {/* 数据列表 Ends */} -->
           <!-- 添加按钮 -->
           <button @click="addResource" class="btn btn-sm btn-primary">添加数据</button>
@@ -21,11 +21,13 @@
         <!-- {/* 更新数据 Starts */} -->
         <div class="col-md-8 order-md-1">
             <h4 class="mb-3">数据
+              {{ activeResource?._id }}
               <button @click="isDetailView = !isDetailView" :class="`btn btn-sm ${toggleBtnClass}`">{{ !isDetailView ? "更新" : "详情" }}</button>
+              
             </h4>
-            <ResourceUpdate v-if="isDetailView" />
+            <ResourceUpdate @onUpdateResource="handleUpdateResource($event)" :resource="activeResource" v-if="isDetailView" />
             <!-- {/* 数据详情 Starts */} -->
-            <ResourceDetail :resource="selectedResource" v-else/>
+            <ResourceDetail :resource="activeResource" v-else/>
             <!-- {/* 数据详情 Ends */} -->
         </div> 
         <!--  {/* 更新数据 Ends */} -->
@@ -34,12 +36,13 @@
 </template>
 
 <script>
-import { toRefs, reactive, computed, ref } from "vue";
+import { toRefs, reactive, computed, ref, onMounted } from "vue";
 import Header from "@/components/Header.vue";
 import ResourceSearch from "@/components/ResourceSearch.vue";
 import ResourceList from "@/components/ResourceList.vue";
 import ResourceUpdate from '@/components/ResourceUpdate.vue';
 import ResourceDetail from '@/components/ResourceDetail.vue';
+// import { fetchResources } from "@/actions/";
 export default {
     components:{
       Header,
@@ -103,15 +106,33 @@ export default {
       //   console.log("===============method=============")
       //   return data.resources.length
       // }
+
+      //生命周期钩子函数
+      onMounted(async() => {
+        // const resources = await fetchResources();
+        // console.log(resources);
+        // fetchResources().then((res) => {
+        //   console.log(res.data);
+        // })
+      })
+
       //计算属性
       const getResourcesLength = computed(() => {
-        console.log("===============compmethod===========")
+        // console.log("===============compmethod===========")
         return data.resources.length
       });
 
       //设置toggle样式
       const toggleBtnClass = computed(() => {
-        return !isDetailView.value ? "btn-primary" : "btn-warning";
+        return isDetailView.value ? "btn-primary" : "btn-warning";
+      });
+
+      const activeResource = computed(() => {
+        return (
+          selectedResource.value ||
+          (getResourcesLength.value > 0 && data.resources[0]) ||
+          null
+        );
       });
 
       const addResource = () => {
@@ -130,8 +151,15 @@ export default {
       const selectResource = (resource) => {
         // console.log(resource)
         selectedResource.value = resource;
-        console.log(selectedResource.value);
+        // console.log(selectedResource.value);
       };
+
+      const handleUpdateResource = (newResource) => {
+        const index = data.resources.findIndex((resource) => resource._id === newResource._id); 
+        data.resources[index] = newResource;
+
+        selectResource(newResource);
+      }
 
       return {
         ...toRefs(data),
@@ -141,6 +169,8 @@ export default {
         toggleBtnClass,
         selectResource,
         selectedResource,
+        activeResource,
+        handleUpdateResource,
       }
     }
 }

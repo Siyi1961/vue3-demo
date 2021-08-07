@@ -1,6 +1,6 @@
 <template>
     <ul class="list-group resource-list mb-3">
-        <li v-for="resource in resources" :key="resource._id" class="list-group-item d-flex justify-content-between lh-condensed resource-list-item" @click="onItemClick(resource)">
+        <li v-for="resource in resources" :key="resource._id" :class="`${activeItemClass(resource)} list-group-item d-flex justify-content-between lh-condensed resource-list-item`" @click="onItemClick(resource)">
             <div>
                 <h6 class="my-0">{{ resource.title }}</h6>
                 <small class="text-muted">{{ resource.description }}</small>
@@ -59,12 +59,15 @@
 </template>
 
 <script>
+import { computed } from "vue";
+
 export default {
     props: {
         resources: {
             type: Array,
             default: () => [],
         },
+        activeId: String,
     },
     setup(props,context) {
 
@@ -72,8 +75,15 @@ export default {
         const onItemClick = (resource) => {
             //注册事件
             context.emit("handleItemClick", resource);
-        }
-        return { onItemClick }
+        };
+
+        //computed
+        const activeItemClass = computed(() => {
+            console.log(props.activeId);
+            return (resource) => (resource._id === props.activeId ? "is-active" : "");
+        });
+
+        return { onItemClick, activeItemClass, }
     }
 }
 </script>
@@ -86,12 +96,15 @@ export default {
 
     &-item {
         cursor: pointer;
+
+        &:hover {
+            background-color: #f3f3f3;
+        }
     }
 
-    &:hover {
+    .is-active {
         background-color: #f3f3f3;
     }
-
 }
 
 // .resource-list {
